@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MCP Client</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-mode">
+    <div id="app" class="app-container">
+        <aside id="sidebar" class="sidebar collapsed">
+            <div class="sidebar-header">
+                <h2>MCP Client</h2>
+                <button id="close-sidebar" class="mobile-only">✕</button>
+            </div>
+            <div class="sidebar-content">
+                <section class="sidebar-section">
+                    <div class="section-header">
+                        <h3>LLM Models</h3>
+                        <button id="add-model-btn" class="icon-btn" title="Add Model">+</button>
+                    </div>
+                    <div id="model-list" class="list-container"></div>
+                    <div class="council-toggle">
+                        <label>
+                            <input type="checkbox" id="council-mode-toggle">
+                            Council Mode
+                        </label>
+                        <span id="council-badge" class="badge hidden">Council [0]</span>
+                    </div>
+                </section>
+
+                <section class="sidebar-section">
+                    <div class="section-header">
+                        <h3>MCP Servers</h3>
+                        <button id="add-server-btn" class="icon-btn" title="Add Server">+</button>
+                    </div>
+                    <div id="server-list" class="list-container"></div>
+                </section>
+
+                <section class="sidebar-section settings">
+                    <div class="section-header">
+                        <h3>Settings</h3>
+                    </div>
+                    <button id="theme-toggle" class="btn-secondary">Toggle Dark Mode</button>
+                    <button id="export-history" class="btn-secondary">Export History</button>
+                    <button id="clear-history" class="btn-danger">Clear History</button>
+                    <button id="reset-app" class="btn-danger">Reset All</button>
+                </section>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <button id="open-sidebar" class="mobile-only">☰</button>
+                <div id="active-model-info">No model selected</div>
+                <div id="app-status" class="status-indicator">● IDLE</div>
+            </header>
+
+            <div id="chat-container" class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <!-- Messages will be injected here -->
+                </div>
+            </div>
+
+            <footer class="input-area">
+                <div id="upload-preview" class="upload-preview"></div>
+                <div class="input-container">
+                    <button id="attach-btn" class="icon-btn" title="Attach File">📎</button>
+                    <textarea id="chat-input" placeholder="Type a message..." rows="1"></textarea>
+                    <button id="send-btn" class="icon-btn send-btn" title="Send Message">➤</button>
+                </div>
+                <input type="file" id="file-input" multiple style="display: none;">
+            </footer>
+        </main>
+
+        <!-- Modals -->
+        <div id="modal-overlay" class="modal-overlay hidden">
+            <!-- Add Model Modal -->
+            <div id="model-modal" class="modal hidden">
+                <h3>Add LLM Model</h3>
+                <form id="model-form">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="model-name" required placeholder="e.g. My GPT-4">
+                    </div>
+                    <div class="form-group">
+                        <label>Provider</label>
+                        <select id="model-provider" required>
+                            <option value="openai">OpenAI-compatible</option>
+                            <option value="openrouter">OpenRouter</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>API Endpoint</label>
+                        <input type="url" id="model-endpoint" required placeholder="https://api.openai.com/v1">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="password" id="model-key" required placeholder="sk-...">
+                    </div>
+                    <div class="form-group">
+                        <label>Model Identifier</label>
+                        <input type="text" id="model-id" required placeholder="gpt-4-turbo">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="test-model-btn" class="btn-secondary">Test Connection</button>
+                        <button type="button" id="cancel-model-btn" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Add Server Modal -->
+            <div id="server-modal" class="modal hidden">
+                <h3>Add MCP Server</h3>
+                <form id="server-form">
+                    <div class="form-group">
+                        <label>Server Name</label>
+                        <input type="text" id="server-name" required placeholder="e.g. Weather API">
+                    </div>
+                    <div class="form-group">
+                        <label>Server URL</label>
+                        <input type="url" id="server-url" required placeholder="https://api.example.com/mcp">
+                    </div>
+                    <div class="form-group">
+                        <label>Auth Header (Optional)</label>
+                        <input type="text" id="server-auth" placeholder="Bearer token-here">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="test-server-btn" class="btn-secondary">Test Connection</button>
+                        <button type="button" id="cancel-server-btn" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
