@@ -69,6 +69,46 @@ body {
     }
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-box,
+.empty-state {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.council-vote {
+    margin-top: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.council-vote-header {
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-secondary);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.council-vote-details {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.council-vote-details pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .sidebar-header {
     padding: 1rem;
     display: flex;

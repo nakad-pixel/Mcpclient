@@ -16,8 +16,7 @@
             <div class="sidebar-content">
                 <section class="sidebar-section">
                     <div class="section-header">
-                        <h3>LLM Models</h3>
-                        <button id="add-model-btn" class="icon-btn" title="Add Model">+</button>
+                        <h3>LLM Council</h3>
                     </div>
                     <div id="model-list" class="list-container"></div>
                     <div class="council-toggle">
@@ -52,14 +51,15 @@
         <main class="main-content">
             <header class="main-header">
                 <button id="open-sidebar" class="mobile-only">☰</button>
-                <div id="active-model-info">No model selected</div>
+                <div id="active-model-info">Disconnected</div>
+                <div class="header-actions">
+                    <button id="open-tool-modal" class="icon-btn" title="Run Tool">🛠️</button>
+                </div>
                 <div id="app-status" class="status-indicator">● IDLE</div>
             </header>
 
             <div id="chat-container" class="chat-container">
-                <div id="chat-messages" class="chat-messages">
-                    <!-- Messages will be injected here -->
-                </div>
+                <div id="chat-messages" class="chat-messages"></div>
             </div>
 
             <footer class="input-area">
@@ -73,64 +73,44 @@
             </footer>
         </main>
 
-        <!-- Modals -->
         <div id="modal-overlay" class="modal-overlay hidden">
-            <!-- Add Model Modal -->
-            <div id="model-modal" class="modal hidden">
-                <h3>Add LLM Model</h3>
-                <form id="model-form">
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" id="model-name" required placeholder="e.g. My GPT-4">
-                    </div>
-                    <div class="form-group">
-                        <label>Provider</label>
-                        <select id="model-provider" required>
-                            <option value="openai">OpenAI-compatible</option>
-                            <option value="openrouter">OpenRouter</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>API Endpoint</label>
-                        <input type="url" id="model-endpoint" required placeholder="https://api.openai.com/v1">
-                    </div>
-                    <div class="form-group">
-                        <label>API Key</label>
-                        <input type="password" id="model-key" required placeholder="sk-...">
-                    </div>
-                    <div class="form-group">
-                        <label>Model Identifier</label>
-                        <input type="text" id="model-id" required placeholder="gpt-4-turbo">
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" id="test-model-btn" class="btn-secondary">Test Connection</button>
-                        <button type="button" id="cancel-model-btn" class="btn-secondary">Cancel</button>
-                        <button type="submit" class="btn-primary">Save</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Add Server Modal -->
             <div id="server-modal" class="modal hidden">
                 <h3>Add MCP Server</h3>
                 <form id="server-form">
                     <div class="form-group">
                         <label>Server Name</label>
-                        <input type="text" id="server-name" required placeholder="e.g. Weather API">
+                        <input type="text" id="server-name" required placeholder="e.g. Klavis Strata">
                     </div>
                     <div class="form-group">
                         <label>Server URL</label>
-                        <input type="url" id="server-url" required placeholder="https://api.example.com/mcp">
+                        <input type="url" id="server-url" required placeholder="https://strata.klavis.ai/mcp/">
                     </div>
                     <div class="form-group">
-                        <label>Auth Header (Optional)</label>
-                        <input type="text" id="server-auth" placeholder="Bearer token-here">
+                        <label>Headers (JSON)</label>
+                        <textarea id="server-headers" rows="4" placeholder='{"Authorization":"Bearer ..."}'></textarea>
                     </div>
                     <div class="modal-actions">
                         <button type="button" id="test-server-btn" class="btn-secondary">Test Connection</button>
                         <button type="button" id="cancel-server-btn" class="btn-secondary">Cancel</button>
                         <button type="submit" class="btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="tool-modal" class="modal hidden">
+                <h3>Run Tool</h3>
+                <form id="tool-form">
+                    <div class="form-group">
+                        <label>Tool</label>
+                        <select id="tool-select" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Arguments (JSON)</label>
+                        <textarea id="tool-args" rows="6" placeholder='{}'></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="cancel-tool-btn" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary">Run</button>
                     </div>
                 </form>
             </div>

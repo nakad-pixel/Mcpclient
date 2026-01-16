@@ -1,7 +1,7 @@
 export const Storage = {
     KEYS: {
         SERVERS: 'mcp_client_servers',
-        MODELS: 'mcp_client_models',
+        ACTIVE_SERVER: 'mcp_client_activeServer',
         ACTIVE_MODEL: 'mcp_client_activeModel',
         COUNCIL_ENABLED: 'mcp_client_councilEnabled',
         COUNCIL_MODELS: 'mcp_client_councilModels',
@@ -12,14 +12,7 @@ export const Storage = {
 
     save(key, data) {
         try {
-            // Don't save API keys to local storage if they are in the models
-            const dataToSave = JSON.parse(JSON.stringify(data));
-            if (key === this.KEYS.MODELS) {
-                dataToSave.forEach(model => {
-                    delete model.apiKey;
-                });
-            }
-            localStorage.setItem(key, JSON.stringify(dataToSave));
+            localStorage.setItem(key, JSON.stringify(data));
         } catch (e) {
             console.error('Error saving to localStorage', e);
         }

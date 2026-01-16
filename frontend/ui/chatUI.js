@@ -47,6 +47,11 @@ export class ChatUI {
                     }
                 });
             }
+
+            if (message.councilVote) {
+                const voteHtml = this.renderCouncilVote(message.councilVote);
+                contentDiv.innerHTML += voteHtml;
+            }
         }
 
         const metaDiv = document.createElement('div');
@@ -92,6 +97,35 @@ export class ChatUI {
                 </div>
                 <div class="tool-details hidden">
                     <pre>${message.content}</pre>
+                </div>
+            </div>
+        `;
+    }
+
+    renderCouncilVote(vote) {
+        const successful = (vote.details || []).filter(d => d.response);
+        const total = (vote.details || []).length;
+        const agreeCount = successful.filter(d => (d.response || '').trim() === (vote.consensus || '').trim()).length;
+
+        const details = (vote.details || [])
+            .map(d => {
+                if (d.error) {
+                    return `- ${d.model}: ERROR (${d.error})`;
+                }
+                const conf = typeof d.confidence === 'number' ? `${Math.round(d.confidence * 100)}%` : '—';
+                return `- ${d.model}: ${JSON.stringify(d.response)} [${conf}]`;
+            })
+            .join('\n');
+
+        return `
+            <div class="council-vote">
+                <div class="council-vote-header" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                    🤝 Council Vote: ${agreeCount}/${Math.max(1, successful.length)} models agree (winner: ${vote.votedModel || 'n/a'}) ▾
+                </div>
+                <div class="council-vote-details hidden">
+                    <div><strong>Strategy:</strong> ${vote.strategy || 'n/a'}</div>
+                    <div><strong>Models:</strong> ${successful.length}/${total} successful</div>
+                    <pre>${details}</pre>
                 </div>
             </div>
         `;

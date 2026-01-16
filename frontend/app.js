@@ -1,5 +1,4 @@
 import { Storage } from './storage/storage.js';
-import { LLMManager } from './llm/llmManager.js';
 import { MCPClient } from './mcp/mcpClient.js';
 import { ToolRouter } from './mcp/toolRouter.js';
 import { Orchestrator } from './orchestrator.js';
@@ -10,59 +9,56 @@ import { UploadUI } from './ui/uploadUI.js';
 class App {
     constructor() {
         this.storage = Storage;
-        this.llmManager = new LLMManager();
         this.mcpClient = new MCPClient();
         this.toolRouter = new ToolRouter(this.mcpClient);
         this.orchestrator = new Orchestrator(this);
-        
+
         this.chatUI = new ChatUI('chat-messages', 'chat-input', 'send-btn');
         this.sidebarUI = new SidebarUI(this);
         this.uploadUI = new UploadUI(this);
+
+        this.councilEnabled = false;
+        this.councilModels = [];
+        this.activeModel = null;
 
         this.init();
     }
 
     async init() {
         console.log('Initializing MCP Client App...');
-        
-        // Load settings
+
         const theme = this.storage.load(this.storage.KEYS.THEME);
         if (theme === 'dark') document.body.classList.add('dark-mode');
 
         const savedServers = this.storage.load(this.storage.KEYS.SERVERS) || [];
         savedServers.forEach(s => this.mcpClient.registerServer(s));
 
-        const savedModels = this.storage.load(this.storage.KEYS.MODELS) || [];
-        savedModels.forEach(m => this.llmManager.registerModel(m));
-
-        const activeModelId = this.storage.load(this.storage.KEYS.ACTIVE_MODEL);
-        if (activeModelId) this.llmManager.selectModel(activeModelId);
-
         const councilEnabled = this.storage.load(this.storage.KEYS.COUNCIL_ENABLED);
         if (councilEnabled) {
-            this.llmManager.toggleCouncil(true);
+            this.councilEnabled = true;
             document.getElementById('council-mode-toggle').checked = true;
-            const councilModels = this.storage.load(this.storage.KEYS.COUNCIL_MODELS);
-            if (councilModels) this.llmManager.setCouncilModels(councilModels);
+            const councilModels = this.storage.load(this.storage.KEYS.COUNCIL_MODELS) || [];
+            this.councilModels = councilModels;
         }
 
-        // Initialize UI
+        const activeModel = this.storage.load(this.storage.KEYS.ACTIVE_MODEL);
+        if (activeModel) {
+            this.activeModel = activeModel;
+        }
+
         this.sidebarUI.renderModels();
         this.sidebarUI.renderServers();
         this.updateActiveModelDisplay();
 
-        // Load chat history
         const history = this.storage.load(this.storage.KEYS.CHAT_HISTORY);
         if (history) this.orchestrator.loadHistory(history);
 
-        // Refresh servers in background
         this.mcpClient.listServers().forEach(s => {
             this.mcpClient.refreshTools(s.id).then(() => this.sidebarUI.renderServers()).catch(() => {});
         });
 
         this.setupAppEventListeners();
-        
-        // Global reference for debugging
+
         window.app = this;
     }
 
@@ -86,14 +82,13 @@ class App {
             }
         };
 
-        // Auto-resize textarea
         chatInput.oninput = () => {
             chatInput.style.height = 'auto';
             chatInput.style.height = chatInput.scrollHeight + 'px';
         };
 
         document.getElementById('council-mode-toggle').onchange = (e) => {
-            this.llmManager.toggleCouncil(e.target.checked);
+            this.councilEnabled = e.target.checked;
             this.sidebarUI.renderModels();
             this.saveConfig();
         };
@@ -106,7 +101,7 @@ class App {
         };
 
         document.getElementById('reset-app').onclick = () => {
-            if (confirm('Reset everything? All models and servers will be deleted.')) {
+            if (confirm('Reset everything? All servers will be deleted.')) {
                 this.storage.clear();
                 location.reload();
             }
@@ -123,22 +118,36 @@ class App {
         };
     }
 
+    getActiveSessionContext() {
+        const servers = this.mcpClient.listServers();
+        const connected = servers.find(s => s.status === 'connected');
+        if (!connected) return null;
+
+        const sessionId = this.mcpClient.getSessionId(connected.id);
+        if (!sessionId) return null;
+
+        return { sessionId, server: connected, serverId: connected.id };
+    }
+
     updateActiveModelDisplay() {
-        const model = this.llmManager.getActiveModel();
-        document.getElementById('active-model-info').textContent = model ? `Model: ${model.name}` : 'No model selected';
+        const servers = this.mcpClient.listServers();
+        const connected = servers.find(s => s.status === 'connected');
+        if (connected) {
+            document.getElementById('active-model-info').textContent = `Server: ${connected.name} (${connected.tools.length} tools)`;
+        } else {
+            document.getElementById('active-model-info').textContent = 'Disconnected';
+        }
     }
 
     saveConfig() {
         this.storage.save(this.storage.KEYS.SERVERS, this.mcpClient.listServers());
-        this.storage.save(this.storage.KEYS.MODELS, this.llmManager.listModels());
-        this.storage.save(this.storage.KEYS.ACTIVE_MODEL, this.llmManager.activeModelId);
-        this.storage.save(this.storage.KEYS.COUNCIL_ENABLED, this.llmManager.councilEnabled);
-        this.storage.save(this.storage.KEYS.COUNCIL_MODELS, this.llmManager.councilModelIds);
+        this.storage.save(this.storage.KEYS.COUNCIL_ENABLED, this.councilEnabled);
+        this.storage.save(this.storage.KEYS.COUNCIL_MODELS, this.councilModels);
+        this.storage.save(this.storage.KEYS.ACTIVE_MODEL, this.activeModel);
         this.storage.save(this.storage.KEYS.CHAT_HISTORY, this.orchestrator.messages);
     }
 }
 
-// Start the app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     new App();
 });
