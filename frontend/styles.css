@@ -493,3 +493,94 @@ textarea {
     border: 1px solid var(--border-color);
     padding: 0.5rem;
 }
+
+/* LLM Keys Modal Styling */
+#llm-modal {
+    min-width: 500px;
+}
+
+#llm-modal .form-group {
+    margin-bottom: 16px;
+}
+
+#llm-modal label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+#llm-modal input[type="text"],
+#llm-modal input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+#llm-modal input[type="text"]:focus,
+#llm-modal input[type="password"]:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.llm-keys-list {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.llm-key-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.llm-key-item .key-info {
+    flex: 1;
+}
+
+.llm-key-item .key-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.llm-key-item .key-status {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.llm-key-item .key-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.llm-key-item .icon-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.llm-key-item .delete-key-btn {
+    color: #e74c3c;
+}
+
+.llm-key-item .delete-key-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    #llm-modal {
+        min-width: auto;
+        width: 90%;
+    }
+}

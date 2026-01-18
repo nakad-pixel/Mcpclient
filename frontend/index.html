@@ -40,6 +40,7 @@
                     <div class="section-header">
                         <h3>Settings</h3>
                     </div>
+                    <button id="open-llm-keys-btn" class="btn-secondary">🔑 Manage LLM Keys</button>
                     <button id="theme-toggle" class="btn-secondary">Toggle Dark Mode</button>
                     <button id="export-history" class="btn-secondary">Export History</button>
                     <button id="clear-history" class="btn-danger">Clear History</button>
@@ -111,6 +112,25 @@
                     <div class="modal-actions">
                         <button type="button" id="cancel-tool-btn" class="btn-secondary">Cancel</button>
                         <button type="submit" class="btn-primary">Run</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- LLM API Keys Modal -->
+            <div id="llm-modal" class="modal hidden">
+                <h3>Manage LLM API Keys</h3>
+                <form id="llm-form">
+                    <div class="form-group">
+                        <label>LLM Service Name</label>
+                        <input type="text" id="llm-service-name" required placeholder="e.g., OpenRouter, Claude, Gemini">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="password" id="llm-api-key" required placeholder="Paste your API key here">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="cancel-llm-btn" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Key</button>
                     </div>
                 </form>
             </div>

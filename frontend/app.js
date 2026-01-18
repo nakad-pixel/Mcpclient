@@ -6,6 +6,16 @@ import { ChatUI } from './ui/chatUI.js';
 import { SidebarUI } from './ui/sidebarUI.js';
 import { UploadUI } from './ui/uploadUI.js';
 
+/**
+ * SECURITY NOTICE:
+ * - LLM API keys are stored ONLY in memory (this.llmKeys object)
+ * - Keys are NEVER persisted to localStorage
+ * - Keys are LOST on page refresh (by design for security)
+ * - Backend stores keys in sessionManager (also in-memory, session-scoped)
+ * - Always validate API keys server-side before use
+ * - Never log or expose API keys in console/network traces
+ */
+
 class App {
     constructor() {
         this.storage = Storage;
@@ -20,6 +30,7 @@ class App {
         this.councilEnabled = false;
         this.councilModels = [];
         this.activeModel = null;
+        this.llmKeys = {}; // In-memory storage: { serviceName: apiKey }
 
         this.init();
     }
@@ -95,6 +106,7 @@ class App {
 
         document.getElementById('clear-history').onclick = () => {
             if (confirm('Clear all chat history?')) {
+                this.clearAllLLMKeys(); // Clear LLM keys when clearing history
                 this.storage.remove(this.storage.KEYS.CHAT_HISTORY);
                 location.reload();
             }
@@ -102,6 +114,7 @@ class App {
 
         document.getElementById('reset-app').onclick = () => {
             if (confirm('Reset everything? All servers will be deleted.')) {
+                this.clearAllLLMKeys(); // Clear LLM keys on reset
                 this.storage.clear();
                 location.reload();
             }
@@ -145,6 +158,85 @@ class App {
         this.storage.save(this.storage.KEYS.COUNCIL_MODELS, this.councilModels);
         this.storage.save(this.storage.KEYS.ACTIVE_MODEL, this.activeModel);
         this.storage.save(this.storage.KEYS.CHAT_HISTORY, this.orchestrator.messages);
+    }
+
+    /**
+     * LLM Key Management Methods
+     */
+
+    /**
+     * Save an LLM API key in memory
+     */
+    async saveLLMKey(serviceName, apiKey) {
+        if (!serviceName || !apiKey) {
+            throw new Error('Service name and API key are required');
+        }
+        // Store in memory (not localStorage for security)
+        this.llmKeys[serviceName.toLowerCase()] = {
+            name: serviceName,
+            key: apiKey,
+            addedAt: new Date().toISOString()
+        };
+        
+        // Also send to backend
+        try {
+            await fetch('/api/llm/key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    serviceName,
+                    apiKey
+                })
+            });
+        } catch (err) {
+            console.warn('Failed to sync key to backend:', err);
+            // Still keep it in memory even if backend sync fails
+        }
+        
+        // Notify UI
+        this.sidebarUI.renderLLMKeys();
+    }
+
+    /**
+     * Get an LLM API key
+     */
+    getLLMKey(serviceName) {
+        const entry = this.llmKeys[serviceName.toLowerCase()];
+        return entry ? entry.key : null;
+    }
+
+    /**
+     * Remove an LLM API key
+     */
+    removeLLMKey(serviceName) {
+        delete this.llmKeys[serviceName.toLowerCase()];
+        
+        // Also notify backend
+        fetch('/api/llm/key', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ serviceName })
+        }).catch(err => console.warn('Failed to sync deletion to backend:', err));
+        
+        // Update UI
+        this.sidebarUI.renderLLMKeys();
+    }
+
+    /**
+     * Get all stored LLM services (names and metadata only)
+     */
+    getAllLLMServices() {
+        return Object.values(this.llmKeys).map(entry => ({
+            name: entry.name,
+            addedAt: entry.addedAt
+        }));
+    }
+
+    /**
+     * Clear all LLM keys on reset
+     */
+    clearAllLLMKeys() {
+        this.llmKeys = {};
     }
 }
 

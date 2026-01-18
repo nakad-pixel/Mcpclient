@@ -152,6 +152,29 @@ export class Orchestrator {
         this.app.saveConfig();
     }
 
+    /**
+     * Prepare LLM tool execution with API key injection
+     */
+    async runLLMTool(toolName, args = {}) {
+        // Extract service name from tool name (e.g., llm_openrouter -> openrouter)
+        const serviceName = toolName.replace(/^llm_/, '').replace(/_/g, '-');
+        
+        // Get the API key from app
+        const apiKey = this.app.getLLMKey(serviceName);
+        
+        if (!apiKey) {
+            throw new Error(`No API key found for "${serviceName}". Please add it in LLM Keys settings.`);
+        }
+
+        // Inject the API key into tool arguments
+        const enrichedArgs = {
+            ...args,
+            apiKey: apiKey  // Tool will receive the API key
+        };
+
+        return this.app.toolRouter.executeTool(toolName, enrichedArgs);
+    }
+
     loadHistory(history) {
         this.messages = history || [];
         this.messages.forEach(msg => this.app.chatUI.renderMessage(msg));
