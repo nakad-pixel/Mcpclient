@@ -71,6 +71,34 @@ export class SidebarUI {
             e.preventDefault();
             await this.runTool();
         };
+
+        // LLM Keys Modal
+        document.getElementById('open-llm-keys-btn').onclick = () => {
+            this.populateLLMKeysModal();
+            this.showModal('llm-modal');
+        };
+
+        document.getElementById('cancel-llm-btn').onclick = () => this.hideModals();
+
+        document.getElementById('llm-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const serviceName = document.getElementById('llm-service-name').value.trim();
+            const apiKey = document.getElementById('llm-api-key').value.trim();
+
+            if (!serviceName || !apiKey) {
+                alert('Please enter both service name and API key');
+                return;
+            }
+
+            try {
+                await this.app.saveLLMKey(serviceName, apiKey);
+                alert(`✅ API key for "${serviceName}" saved successfully`);
+                document.getElementById('llm-form').reset();
+                this.hideModals();
+            } catch (err) {
+                alert(`❌ Error saving key: ${err.message}`);
+            }
+        };
     }
 
     showModal(id) {
@@ -305,6 +333,78 @@ export class SidebarUI {
             };
 
             this.serverList.appendChild(row);
+        });
+    }
+
+    /**
+     * Populate the LLM keys modal with current keys and render them
+     */
+    populateLLMKeysModal() {
+        const formContainer = document.getElementById('llm-modal');
+        let listContainer = formContainer.querySelector('.llm-keys-list');
+        
+        // Create list container if it doesn't exist
+        if (!listContainer) {
+            listContainer = document.createElement('div');
+            listContainer.className = 'llm-keys-list';
+            formContainer.appendChild(listContainer);
+        }
+        
+        this.renderLLMKeys();
+    }
+
+    /**
+     * Render the list of LLM API keys (without secrets)
+     */
+    renderLLMKeys() {
+        let listContainer = document.querySelector('#llm-modal .llm-keys-list');
+        
+        // Create if doesn't exist
+        if (!listContainer) {
+            listContainer = document.createElement('div');
+            listContainer.className = 'llm-keys-list';
+            document.getElementById('llm-modal').appendChild(listContainer);
+        }
+
+        listContainer.innerHTML = '';
+
+        const services = this.app.getAllLLMServices();
+
+        if (services.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.textContent = 'No LLM keys added yet. Add one above to get started.';
+            listContainer.appendChild(empty);
+            return;
+        }
+
+        const title = document.createElement('h4');
+        title.textContent = 'Saved API Keys:';
+        title.style.marginBottom = '10px';
+        listContainer.appendChild(title);
+
+        services.forEach(service => {
+            const row = document.createElement('div');
+            row.className = 'llm-key-item';
+
+            row.innerHTML = `
+                <div class="key-info">
+                    <div class="key-name">🔑 ${service.name}</div>
+                    <div class="key-status">Added: ${new Date(service.addedAt).toLocaleDateString()}</div>
+                </div>
+                <div class="key-actions">
+                    <button type="button" class="icon-btn delete-key-btn" title="Delete">🗑️</button>
+                </div>
+            `;
+
+            row.querySelector('.delete-key-btn').onclick = (e) => {
+                e.preventDefault();
+                if (confirm(`Delete API key for "${service.name}"?`)) {
+                    this.app.removeLLMKey(service.name);
+                }
+            };
+
+            listContainer.appendChild(row);
         });
     }
 }

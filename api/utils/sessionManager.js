@@ -8,6 +8,7 @@ function createSessionId(serverId) {
 export class SessionManager {
     constructor() {
         this.sessions = new Map();
+        this.llmKeys = new Map(); // serviceName -> apiKey (for LLM key management)
     }
 
     async createSession(serverId, serverUrl, headers) {
@@ -76,6 +77,72 @@ export class SessionManager {
             toolCount: s.tools.length,
             timestamp: s.timestamp
         }));
+    }
+
+    /**
+     * LLM Key Management Methods
+     * These methods handle in-memory storage of LLM API keys
+     */
+
+    /**
+     * Save an LLM API key in memory
+     * @param {string} serviceName - Name of the LLM service (e.g., "OpenRouter")
+     * @param {string} apiKey - The API key
+     */
+    setLLMKey(serviceName, apiKey) {
+        if (!serviceName || !apiKey) {
+            throw new Error('Service name and API key are required');
+        }
+        this.llmKeys.set(serviceName.toLowerCase(), {
+            name: serviceName,
+            key: apiKey,
+            addedAt: new Date().toISOString()
+        });
+    }
+
+    /**
+     * Retrieve an LLM API key
+     * @param {string} serviceName - Name of the LLM service
+     * @returns {string|null} The API key or null if not found
+     */
+    getLLMKey(serviceName) {
+        const entry = this.llmKeys.get(serviceName.toLowerCase());
+        return entry ? entry.key : null;
+    }
+
+    /**
+     * Check if an LLM key exists
+     * @param {string} serviceName - Name of the LLM service
+     * @returns {boolean}
+     */
+    hasLLMKey(serviceName) {
+        return this.llmKeys.has(serviceName.toLowerCase());
+    }
+
+    /**
+     * Remove an LLM API key
+     * @param {string} serviceName - Name of the LLM service
+     */
+    removeLLMKey(serviceName) {
+        this.llmKeys.delete(serviceName.toLowerCase());
+    }
+
+    /**
+     * Get all stored LLM services (names only, not keys)
+     * @returns {Array<{name: string, addedAt: string}>}
+     */
+    getAllLLMServices() {
+        return Array.from(this.llmKeys.values()).map(entry => ({
+            name: entry.name,
+            addedAt: entry.addedAt
+        }));
+    }
+
+    /**
+     * Clear all LLM keys (usually on logout/reset)
+     */
+    clearAllLLMKeys() {
+        this.llmKeys.clear();
     }
 }
 
