@@ -4,6 +4,8 @@
 
 import { globalSessionManager } from '../utils/sessionManager.js';
 import { readJsonBody } from '../utils/request.js';
+import { sendSuccess, sendError } from '../utils/errorHandler.js';
+import { ERROR_CODES, HTTP_STATUS } from '../utils/constants.js';
 
 export async function handleLLMRequest(req, res) {
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -17,13 +19,17 @@ export async function handleLLMRequest(req, res) {
             const { serviceName, apiKey } = body;
             
             if (!serviceName || !apiKey) {
-                return res.status(400).json({ error: 'Service name and API key required' });
+                return sendError(
+                    res,
+                    ERROR_CODES.INVALID_REQUEST,
+                    'Service name and API key required',
+                    HTTP_STATUS.BAD_REQUEST
+                );
             }
 
             globalSessionManager.setLLMKey(serviceName, apiKey);
             
-            return res.status(200).json({
-                success: true,
+            return sendSuccess(res, {
                 message: `API key for "${serviceName}" saved successfully`,
                 service: serviceName
             });
@@ -35,13 +41,17 @@ export async function handleLLMRequest(req, res) {
             const { serviceName } = body;
             
             if (!serviceName) {
-                return res.status(400).json({ error: 'Service name required' });
+                return sendError(
+                    res,
+                    ERROR_CODES.INVALID_REQUEST,
+                    'Service name required',
+                    HTTP_STATUS.BAD_REQUEST
+                );
             }
 
             globalSessionManager.removeLLMKey(serviceName);
             
-            return res.status(200).json({
-                success: true,
+            return sendSuccess(res, {
                 message: `API key for "${serviceName}" removed`,
                 service: serviceName
             });
@@ -51,8 +61,7 @@ export async function handleLLMRequest(req, res) {
             // Get list of configured LLM services (metadata only, no keys)
             const services = globalSessionManager.getAllLLMServices();
             
-            return res.status(200).json({
-                success: true,
+            return sendSuccess(res, {
                 services: services,
                 count: services.length
             });
@@ -63,29 +72,46 @@ export async function handleLLMRequest(req, res) {
             const serviceName = url.searchParams.get('service');
             
             if (!serviceName) {
-                return res.status(400).json({ error: 'Service name required' });
+                return sendError(
+                    res,
+                    ERROR_CODES.INVALID_REQUEST,
+                    'Service name required',
+                    HTTP_STATUS.BAD_REQUEST
+                );
             }
 
             const apiKey = globalSessionManager.getLLMKey(serviceName);
             
             if (!apiKey) {
-                return res.status(404).json({ error: `No API key found for "${serviceName}"` });
+                return sendError(
+                    res,
+                    ERROR_CODES.INVALID_REQUEST,
+                    `No API key found for "${serviceName}"`,
+                    HTTP_STATUS.NOT_FOUND
+                );
             }
 
-            return res.status(200).json({
-                success: true,
+            return sendSuccess(res, {
                 service: serviceName,
                 apiKey: apiKey  // Only returned to verified backend calls
             });
         }
 
-        return res.status(404).json({ error: 'Endpoint not found' });
+        return sendError(
+            res,
+            ERROR_CODES.INVALID_REQUEST,
+            'Endpoint not found',
+            HTTP_STATUS.NOT_FOUND
+        );
 
     } catch (err) {
         console.error('LLM Route Error:', err);
-        return res.status(500).json({
-            error: 'Internal server error',
-            message: err.message
-        });
+        return sendError(
+            res,
+            ERROR_CODES.INTERNAL_ERROR,
+            'Internal server error',
+            HTTP_STATUS.INTERNAL_ERROR,
+            { message: err.message }
+        );
     }
 }
