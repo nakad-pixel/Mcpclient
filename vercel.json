@@ -2,7 +2,47 @@
   "buildCommand": "npm run build",
   "outputDirectory": "frontend",
   "functions": {
-    "api/index.js": {
+    "api/1-llm-management.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/2-mcp-connect.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/3-mcp-call.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/4-mcp-disconnect.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/5-mcp-tools.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/6-council-consensus.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/7-council-routing.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/8-session-utils.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/9-core-utils.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/10-mcp-client.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/11-index.js": {
       "memory": 1024,
       "maxDuration": 60
     }

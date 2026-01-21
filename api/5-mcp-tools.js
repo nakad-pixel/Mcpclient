@@ -1,30 +1,32 @@
-import { corsMiddleware } from '../utils/cors.js';
-import { sendSuccess, sendError, handleUnknownError } from '../utils/errorHandler.js';
-import { ERROR_CODES, HTTP_STATUS } from '../utils/constants.js';
-import { readJsonBody } from '../utils/request.js';
-import { globalSessionManager } from '../utils/sessionManager.js';
+/**
+ * MCP Tools Handler - GET /api/mcp/tools
+ * Lists available tools from MCP server session
+ */
+
+import { globalSessionManager } from './8-session-utils.js';
+import { corsMiddleware, sendSuccess, sendError, handleUnknownError, ERROR_CODES, HTTP_STATUS } from './9-core-utils.js';
 
 export default async function handler(req, res) {
     if (corsMiddleware(req, res)) return;
 
-    if (req.method !== 'POST') {
+    if (req.method !== 'GET') {
         return sendError(
             res,
             ERROR_CODES.INVALID_REQUEST,
-            'Method not allowed',
+            'Method not allowed - GET required',
             HTTP_STATUS.BAD_REQUEST
         );
     }
 
     try {
-        const body = await readJsonBody(req);
-        const { sessionId } = body;
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const sessionId = url.searchParams.get('sessionId');
 
         if (!sessionId || typeof sessionId !== 'string') {
             return sendError(
                 res,
                 ERROR_CODES.INVALID_REQUEST,
-                'sessionId is required and must be a string',
+                'sessionId query parameter is required and must be a string',
                 HTTP_STATUS.BAD_REQUEST
             );
         }

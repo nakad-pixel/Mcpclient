@@ -1,4 +1,9 @@
-import { TIMEOUTS } from './constants.js';
+/**
+ * MCP Client Utilities
+ * Consolidated MCP client functionality for serverless functions
+ */
+
+import { TIMEOUTS } from './9-core-utils.js';
 
 function generateRequestId() {
     return `req_${Date.now()}_${Math.random().toString(16).slice(2)}`;

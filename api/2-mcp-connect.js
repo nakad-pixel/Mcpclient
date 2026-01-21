@@ -1,8 +1,10 @@
-import { corsMiddleware } from '../utils/cors.js';
-import { sendSuccess, sendError, handleUnknownError } from '../utils/errorHandler.js';
-import { ERROR_CODES, HTTP_STATUS } from '../utils/constants.js';
-import { readJsonBody, isValidHttpUrl, isHttpsUrl, isLocalhostUrl } from '../utils/request.js';
-import { globalSessionManager } from '../utils/sessionManager.js';
+/**
+ * MCP Connect Handler - POST /api/mcp/connect
+ * Establishes connection to MCP server and creates session
+ */
+
+import { globalSessionManager } from './8-session-utils.js';
+import { readJsonBody, corsMiddleware, isValidHttpUrl, isHttpsUrl, isLocalhostUrl, sendSuccess, sendError, handleUnknownError, ERROR_CODES, HTTP_STATUS } from './9-core-utils.js';
 
 export default async function handler(req, res) {
     if (corsMiddleware(req, res)) return;

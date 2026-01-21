@@ -1,8 +1,10 @@
-import { corsMiddleware } from '../utils/cors.js';
-import { sendSuccess, sendError, handleUnknownError } from '../utils/errorHandler.js';
-import { ERROR_CODES, HTTP_STATUS } from '../utils/constants.js';
-import { readJsonBody } from '../utils/request.js';
-import { globalSessionManager } from '../utils/sessionManager.js';
+/**
+ * MCP Call Handler - POST /api/mcp/call
+ * Executes tools on connected MCP servers
+ */
+
+import { globalSessionManager } from './8-session-utils.js';
+import { readJsonBody, corsMiddleware, sendSuccess, sendError, handleUnknownError, ERROR_CODES, HTTP_STATUS } from './9-core-utils.js';
 
 function validateToolArguments(tool, args) {
     if (!tool.inputSchema) return { valid: true };

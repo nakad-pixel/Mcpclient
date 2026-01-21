@@ -1,6 +1,6 @@
 /**
- * Consolidated Utilities - Error handling, CORS, constants, and request helpers
- * This file consolidates the utility functions into a single serverless function
+ * Core Utilities - CORS, error handling, constants, and request helpers
+ * Consolidated utilities for all serverless functions
  */
 
 // Constants
