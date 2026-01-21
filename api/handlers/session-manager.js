@@ -1,5 +1,5 @@
-import { MCPClient } from './mcp-client.js';
-import { TIMEOUTS } from './utils.js';
+import { MCPClient } from '../utils/mcpClient.js';
+import { TIMEOUTS } from '../utils/constants.js';
 
 function createSessionId(serverId) {
     return `sess_${serverId}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
