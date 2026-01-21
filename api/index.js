@@ -3,17 +3,26 @@
  * Routes requests to appropriate handlers based on path
  */
 
-import { handleLLMRequest } from './routes/llmRoutes.js';
+// Import LLM handlers
+import llmKeysHandler from './handlers/llm-keys.js';
+import llmServicesHandler from './handlers/llm-services.js';
+import llmKeyGetHandler from './handlers/llm-key-get.js';
 
 // Import MCP handlers
-import callHandler from './mcp/call.js';
-import connectHandler from './mcp/connect.js';
-import disconnectHandler from './mcp/disconnect.js';
-import toolsHandler from './mcp/tools.js';
-import consensusHandler from './council/consensus.js';
+import mcpCallHandler from './handlers/mcp-call.js';
+import mcpConnectHandler from './handlers/mcp-connect.js';
+import mcpDisconnectHandler from './handlers/mcp-disconnect.js';
+import mcpToolsHandler from './handlers/mcp-tools.js';
+
+// Import Council handlers
+import councilConsensusHandler from './handlers/council-consensus.js';
+import councilRouterHandler from './handlers/council-router.js';
+
+// Import Health handler
+import healthHandler from './handlers/health.js';
 
 // CORS middleware
-import { corsMiddleware } from './utils/cors.js';
+import { corsMiddleware } from './handlers/utils.js';
 
 // Main API route handler
 export default async function handler(req, res) {
@@ -26,30 +35,49 @@ export default async function handler(req, res) {
 
     try {
         // Route LLM API key management requests
-        if (path.startsWith('/api/llm/')) {
-            return await handleLLMRequest(req, res);
+        if (path === '/api/llm/key') {
+            if (req.method === 'POST' || req.method === 'DELETE') {
+                return await llmKeysHandler(req, res);
+            }
+        }
+
+        if (path === '/api/llm/services') {
+            return await llmServicesHandler(req, res);
+        }
+
+        if (path === '/api/llm/key' && req.method === 'GET') {
+            return await llmKeyGetHandler(req, res);
         }
 
         // Route MCP proxy requests
         if (path === '/api/mcp/call') {
-            return await callHandler(req, res);
+            return await mcpCallHandler(req, res);
         }
 
         if (path === '/api/mcp/connect') {
-            return await connectHandler(req, res);
+            return await mcpConnectHandler(req, res);
         }
 
         if (path === '/api/mcp/disconnect') {
-            return await disconnectHandler(req, res);
+            return await mcpDisconnectHandler(req, res);
         }
 
         if (path === '/api/mcp/tools') {
-            return await toolsHandler(req, res);
+            return await mcpToolsHandler(req, res);
         }
 
-        // Route LLM Council consensus requests
+        // Route LLM Council requests
         if (path === '/api/council/consensus') {
-            return await consensusHandler(req, res);
+            return await councilConsensusHandler(req, res);
+        }
+
+        if (path === '/api/council') {
+            return await councilRouterHandler(req, res);
+        }
+
+        // Health check endpoint
+        if (path === '/api/health') {
+            return await healthHandler(req, res);
         }
 
         // If no route matches, return 404
