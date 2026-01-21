@@ -1,8 +1,10 @@
-import { corsMiddleware } from '../utils/cors.js';
-import { sendSuccess, sendError } from '../utils/errorHandler.js';
-import { ERROR_CODES, HTTP_STATUS } from '../utils/constants.js';
-import { readJsonBody } from '../utils/request.js';
-import { globalSessionManager } from '../utils/sessionManager.js';
+/**
+ * MCP Disconnect Handler - POST /api/mcp/disconnect
+ * Closes MCP server sessions
+ */
+
+import { globalSessionManager } from './8-session-utils.js';
+import { readJsonBody, corsMiddleware, sendSuccess, sendError, ERROR_CODES, HTTP_STATUS } from './9-core-utils.js';
 
 export default async function handler(req, res) {
     if (corsMiddleware(req, res)) return;

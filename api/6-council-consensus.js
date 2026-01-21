@@ -1,5 +1,10 @@
-import { globalSessionManager } from './session-manager.js';
-import { readJsonBody, corsMiddleware, sendSuccess, sendError, handleUnknownError, ERROR_CODES, HTTP_STATUS } from './utils.js';
+/**
+ * Council Consensus Handler - POST /api/council/consensus
+ * Executes LLM council consensus with multiple models
+ */
+
+import { globalSessionManager } from './8-session-utils.js';
+import { readJsonBody, corsMiddleware, sendSuccess, sendError, handleUnknownError, ERROR_CODES, HTTP_STATUS } from './9-core-utils.js';
 
 function getLLMToolName(modelName) {
     const normalized = modelName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
