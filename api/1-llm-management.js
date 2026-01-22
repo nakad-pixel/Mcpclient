@@ -62,14 +62,15 @@ export default async function handler(req, res) {
 
             if (req.method === 'GET') {
                 // Get an LLM API key (for verification, returns metadata)
-                const body = await readJsonBody(req);
-                const { serviceName } = body;
+                // Note: GET requests typically don't have bodies, so we'll use query params
+                const url = new URL(req.url, `http://${req.headers.host}`);
+                const serviceName = url.searchParams.get('serviceName');
                 
                 if (!serviceName) {
                     return sendError(
                         res,
                         ERROR_CODES.INVALID_REQUEST,
-                        'Service name required',
+                        'Service name required (use ?serviceName=... query parameter)',
                         HTTP_STATUS.BAD_REQUEST
                     );
                 }

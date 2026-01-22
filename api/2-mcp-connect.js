@@ -73,8 +73,9 @@ export default async function handler(req, res) {
             return sendError(
                 res,
                 ERROR_CODES.INVALID_REQUEST,
-                err.message,
-                HTTP_STATUS.BAD_REQUEST
+                `Invalid response from server: ${err.message}. This may indicate a CORS issue or incorrect URL.`,
+                HTTP_STATUS.BAD_REQUEST,
+                { suggestion: 'Check that the MCP server URL is correct and returns JSON responses.' }
             );
         }
 
@@ -82,13 +83,29 @@ export default async function handler(req, res) {
             return sendError(
                 res,
                 ERROR_CODES.TIMEOUT,
-                'Connection to MCP server timed out',
+                'Connection to MCP server timed out. The server may be slow or unavailable.',
                 HTTP_STATUS.GATEWAY_TIMEOUT,
                 { url: req.body?.serverUrl }
             );
         }
 
         if (err.status) {
+            // Check if this is an HTML response error
+            if (err.isHtmlResponse) {
+                return sendError(
+                    res,
+                    ERROR_CODES.MCP_ERROR,
+                    `Connection failed: Server returned HTML instead of JSON. This indicates either a CORS issue or incorrect URL. Check that:\n• The MCP server URL is correct\n• The server supports CORS requests\n• The strata_id parameter is valid`,
+                    HTTP_STATUS.BAD_GATEWAY,
+                    { 
+                        status: err.status, 
+                        body: err.body,
+                        suggestion: err.suggestion,
+                        isHtmlResponse: true
+                    }
+                );
+            }
+            
             return sendError(
                 res,
                 ERROR_CODES.MCP_ERROR,

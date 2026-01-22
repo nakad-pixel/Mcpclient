@@ -37,13 +37,35 @@ export class BackendClient {
                 body: JSON.stringify(body)
             });
 
-            const data = await response.json();
+            // Handle non-JSON responses (like HTML error pages)
+            const responseText = await response.text();
+            
+            if (!responseText.trim()) {
+                throw new Error(`Server returned empty response (${response.status})`);
+            }
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                // Check if response is HTML
+                if (responseText.trim().startsWith('<') || responseText.startsWith('The page')) {
+                    const error = new Error(`Server returned HTML instead of JSON. This may be a CORS issue or server error.`);
+                    error.isHtmlResponse = true;
+                    error.status = response.status;
+                    error.body = responseText.substring(0, 200);
+                    throw error;
+                }
+                throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
+            }
 
             if (!data.success) {
                 const error = data.error;
                 const err = new Error(`${error.code}: ${error.message}`);
                 err.code = error.code;
                 err.details = error.details;
+                err.suggestion = error.suggestion;
+                err.isHtmlResponse = error.isHtmlResponse;
                 throw err;
             }
 
@@ -53,8 +75,10 @@ export class BackendClient {
                 throw err;
             }
 
-            const networkError = new Error(`Network error: ${err.message}`);
+            const networkError = new Error(`${err.message}`);
             networkError.code = 'NETWORK_ERROR';
+            networkError.isHtmlResponse = err.isHtmlResponse;
+            networkError.status = err.status;
             throw networkError;
         }
     }
