@@ -45,7 +45,29 @@ export class MCPClient {
                 throw error;
             }
 
-            const data = await response.json();
+            // Get response text first to check if it's JSON or HTML
+            const responseText = await response.text();
+            
+            // Check if response is HTML (likely an error page)
+            if (responseText.trim().startsWith('<') || responseText.startsWith('The page')) {
+                const error = new Error('Server returned HTML instead of JSON. This may be a CORS error, incorrect URL, or server issue.');
+                error.isHtmlResponse = true;
+                error.status = response.status;
+                error.body = responseText.substring(0, 200); // First 200 chars for debugging
+                error.suggestion = 'Check that the MCP server URL is correct and supports CORS requests.';
+                throw error;
+            }
+
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                const error = new Error(`Invalid JSON response: ${parseError.message}`);
+                error.status = response.status;
+                error.body = responseText.substring(0, 200);
+                error.suggestion = 'The server may be returning an error page. Verify the URL and server status.';
+                throw error;
+            }
 
             if (data.error) {
                 const err = new Error(data.error.message || 'MCP error');

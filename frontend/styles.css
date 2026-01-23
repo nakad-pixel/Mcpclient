@@ -109,6 +109,55 @@ body {
     word-break: break-word;
 }
 
+/* Council controls - mobile-friendly */
+.council-toggle {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.council-toggle label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.council-toggle input[type="checkbox"] {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-color);
+}
+
+/* Mobile optimizations for council controls */
+@media (max-width: 768px) {
+    .council-toggle {
+        padding: 16px;
+        margin-top: 16px;
+    }
+    
+    .council-toggle label {
+        font-size: 16px;
+        font-weight: 600;
+    }
+    
+    .council-toggle input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+    
+    #council-badge {
+        font-size: 14px;
+        padding: 4px 8px;
+    }
+}
+
 .sidebar-header {
     padding: 1rem;
     display: flex;
