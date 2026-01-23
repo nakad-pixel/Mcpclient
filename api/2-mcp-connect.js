@@ -75,7 +75,11 @@ export default async function handler(req, res) {
                 ERROR_CODES.INVALID_REQUEST,
                 `Invalid response from server: ${err.message}. This may indicate a CORS issue or incorrect URL.`,
                 HTTP_STATUS.BAD_REQUEST,
-                { suggestion: 'Check that the MCP server URL is correct and returns JSON responses.' }
+                { 
+                    suggestion: 'Check that the MCP server URL is correct and returns JSON responses.',
+                    status: err.status,
+                    responsePreview: err.body
+                }
             );
         }
 
@@ -85,33 +89,88 @@ export default async function handler(req, res) {
                 ERROR_CODES.TIMEOUT,
                 'Connection to MCP server timed out. The server may be slow or unavailable.',
                 HTTP_STATUS.GATEWAY_TIMEOUT,
-                { url: req.body?.serverUrl }
+                { 
+                    url: req.body?.serverUrl,
+                    suggestion: 'Check your network connection and try again. If the issue persists, the server may be down.'
+                }
             );
         }
 
         if (err.status) {
             // Check if this is an HTML response error
             if (err.isHtmlResponse) {
+                // Provide detailed error message based on HTTP status code
+                let errorMessage = err.detailedMessage || `Connection failed: Server returned HTML instead of JSON`;
+                let suggestion = err.suggestion || 'Check that the MCP server URL is correct and supports CORS requests.';
+                
+                // Add specific troubleshooting steps for common issues
+                let troubleshooting = [];
+                switch (err.status) {
+                    case 401:
+                        troubleshooting = [
+                            '• Verify if the server requires authentication headers',
+                            '• Check if you need to provide API keys or tokens',
+                            '• Contact the server administrator for access credentials'
+                        ];
+                        break;
+                    case 403:
+                        troubleshooting = [
+                            '• The server may be blocking requests from this domain',
+                            '• Try accessing the URL directly in your browser to verify',
+                            '• Contact the server administrator for access permissions'
+                        ];
+                        break;
+                    case 404:
+                        troubleshooting = [
+                            '• Verify the server URL is correct',
+                            '• Check that the strata_id parameter is valid and not expired',
+                            '• Try accessing the URL directly in your browser'
+                        ];
+                        break;
+                    case 500:
+                    case 502:
+                    case 503:
+                    case 504:
+                        troubleshooting = [
+                            '• The server may be temporarily unavailable',
+                            '• Try again later',
+                            '• Contact the server administrator if the issue persists'
+                        ];
+                        break;
+                    default:
+                        troubleshooting = [
+                            '• Check the server URL is correct',
+                            '• Verify CORS configuration on the server',
+                            '• Test the URL directly in your browser'
+                        ];
+                }
+                
                 return sendError(
                     res,
                     ERROR_CODES.MCP_ERROR,
-                    `Connection failed: Server returned HTML instead of JSON. This indicates either a CORS issue or incorrect URL. Check that:\n• The MCP server URL is correct\n• The server supports CORS requests\n• The strata_id parameter is valid`,
+                    errorMessage,
                     HTTP_STATUS.BAD_GATEWAY,
                     { 
                         status: err.status, 
-                        body: err.body,
-                        suggestion: err.suggestion,
-                        isHtmlResponse: true
+                        responsePreview: err.responsePreview,
+                        suggestion: suggestion,
+                        troubleshooting: troubleshooting,
+                        isHtmlResponse: true,
+                        serverUrl: req.body?.serverUrl
                     }
                 );
             }
-            
+             
             return sendError(
                 res,
                 ERROR_CODES.MCP_ERROR,
                 `Failed to connect to MCP server: ${err.message}`,
                 HTTP_STATUS.BAD_GATEWAY,
-                { status: err.status, body: err.body }
+                { 
+                    status: err.status, 
+                    body: err.body,
+                    suggestion: 'Check the server URL and try again.'
+                }
             );
         }
 

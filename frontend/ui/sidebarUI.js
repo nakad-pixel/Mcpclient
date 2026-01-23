@@ -43,10 +43,28 @@ export class SidebarUI {
             } catch (err) {
                 console.error('Connection test failed:', err);
                 
-                // Provide mobile-friendly error messages
+                // Provide mobile-friendly error messages with enhanced details
                 let errorMessage = err.message;
+                let detailedMessage = '';
                 
-                if (err.message.includes('HTML instead of JSON')) {
+                if (err.isHtmlResponse) {
+                    // Enhanced error handling for HTML responses
+                    const status = err.status || 'Unknown';
+                    const suggestion = err.suggestion || 'Check the server URL and try again.';
+                    const troubleshooting = err.troubleshooting || [];
+                    
+                    errorMessage = `${status}: ${suggestion}`;
+                    
+                    // Build detailed troubleshooting message
+                    if (troubleshooting.length > 0) {
+                        detailedMessage = 'Troubleshooting steps:\n' + troubleshooting.join('\n');
+                    }
+                    
+                    // Add response preview if available
+                    if (err.responsePreview) {
+                        detailedMessage += '\n\nResponse preview:\n' + err.responsePreview.substring(0, 100);
+                    }
+                } else if (err.message.includes('HTML instead of JSON')) {
                     errorMessage = 'Connection failed. Check:\n• Server URL is correct\n• Server supports CORS\n• strata_id is valid';
                 } else if (err.message.includes('timed out')) {
                     errorMessage = 'Connection timed out. Server may be slow or unavailable.';
@@ -56,9 +74,13 @@ export class SidebarUI {
                 
                 btn.textContent = '❌ Failed';
                 
-                // Show mobile-friendly alert
+                // Show mobile-friendly alert with enhanced details
                 setTimeout(() => {
-                    alert(`Test failed: ${errorMessage}`);
+                    let fullMessage = `Test failed: ${errorMessage}`;
+                    if (detailedMessage) {
+                        fullMessage += '\n\n' + detailedMessage;
+                    }
+                    alert(fullMessage);
                     btn.textContent = 'Test Connection';
                 }, 500);
             } finally {
@@ -365,7 +387,32 @@ export class SidebarUI {
                         this.app.updateActiveModelDisplay();
                     })
                     .catch(err => {
-                        alert(`Refresh failed: ${err.message}`);
+                        // Enhanced error handling for refresh failures
+                        let errorMessage = err.message;
+                        let detailedMessage = '';
+                        
+                        if (err.isHtmlResponse) {
+                            const status = err.status || 'Unknown';
+                            const suggestion = err.suggestion || 'Check the server URL and try again.';
+                            const troubleshooting = err.troubleshooting || [];
+                            
+                            errorMessage = `${status}: ${suggestion}`;
+                            
+                            if (troubleshooting.length > 0) {
+                                detailedMessage = 'Troubleshooting:\n' + troubleshooting.join('\n');
+                            }
+                            
+                            if (err.responsePreview) {
+                                detailedMessage += '\n\nResponse:\n' + err.responsePreview.substring(0, 100);
+                            }
+                        }
+                        
+                        let fullMessage = `Refresh failed: ${errorMessage}`;
+                        if (detailedMessage) {
+                            fullMessage += '\n\n' + detailedMessage;
+                        }
+                        
+                        alert(fullMessage);
                         this.renderServers();
                     });
             };
