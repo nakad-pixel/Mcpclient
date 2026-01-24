@@ -61,8 +61,8 @@ export class BackendClient {
                     
                     switch (response.status) {
                         case 401:
-                            suggestion = 'The server requires authentication. Check if you need to provide API keys or authentication headers.';
-                            detailedMessage = '401 Unauthorized: Server requires authentication.';
+                            suggestion = 'The server requires authentication. If your server does not require auth, check that headers field is empty and no extra headers are being sent.';
+                            detailedMessage = '401 Unauthorized: Server rejected the request. For private servers without auth, ensure the headers field is left empty.';
                             break;
                         case 403:
                             suggestion = 'Access forbidden. The server may be blocking requests from this domain or IP.';

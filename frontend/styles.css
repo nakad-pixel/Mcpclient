@@ -460,6 +460,13 @@ textarea {
     margin-bottom: 0.25rem;
 }
 
+.help-text {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
 .form-group input, .form-group select {
     width: 100%;
     padding: 0.5rem;
