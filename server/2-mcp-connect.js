@@ -60,6 +60,13 @@ export default async function handler(req, res) {
 
         const mcpHeaders = headers && typeof headers === 'object' ? headers : {};
 
+        // Debug logging for MCP connection
+        console.log(`[MCP Connect] Connection request received:`);
+        console.log(`[MCP Connect] Server ID: ${serverId}`);
+        console.log(`[MCP Connect] Server URL: ${serverUrl}`);
+        console.log(`[MCP Connect] Headers provided:`, JSON.stringify(mcpHeaders, null, 2));
+        console.log(`[MCP Connect] Headers object type: ${typeof headers}, isArray: ${Array.isArray(headers)}`);
+
         const session = await globalSessionManager.createSession(serverId, serverUrl, mcpHeaders);
 
         sendSuccess(res, {

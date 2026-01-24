@@ -27,21 +27,48 @@ export class MCPClient {
                 params
             };
 
+            const requestHeaders = {
+                'Content-Type': 'application/json',
+                ...this.headers
+            };
+
+            // Debug logging for MCP requests
+            console.log(`[MCP Client] Making ${method} request to:`, this.serverUrl);
+            console.log(`[MCP Client] Request headers:`, JSON.stringify(requestHeaders, null, 2));
+            console.log(`[MCP Client] Request body:`, JSON.stringify(body, null, 2));
+
             const response = await fetch(this.serverUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...this.headers
-                },
+                headers: requestHeaders,
                 body: JSON.stringify(body),
                 signal: controller.signal
             });
 
+            // Log response details
+            console.log(`[MCP Client] Response status:`, response.status, response.statusText);
+            console.log(`[MCP Client] Response headers:`, Object.fromEntries(response.headers.entries()));
+
             if (!response.ok) {
                 const text = await response.text().catch(() => null);
+                console.log(`[MCP Client] Error response body:`, text);
+
                 const error = new Error(`MCP call failed: ${response.status} ${response.statusText}`);
                 error.status = response.status;
                 error.body = text;
+
+                // Additional debug for 401 errors
+                if (response.status === 401) {
+                    console.error(`[MCP Client] 401 Unauthorized - Server rejected the request`);
+                    console.error(`[MCP Client] URL: ${this.serverUrl}`);
+                    console.error(`[MCP Client] Headers sent:`, JSON.stringify(requestHeaders, null, 2));
+                    console.error(`[MCP Client] Request method: POST`);
+                    console.error(`[MCP Client] Request body:`, JSON.stringify(body, null, 2));
+                    console.error(`[MCP Client] Troubleshooting:`);
+                    console.error(`[MCP Client]   - If server doesn't require auth, headers should be empty object {}`);
+                    console.error(`[MCP Client]   - If server requires auth, check Authorization header format`);
+                    console.error(`[MCP Client]   - Some servers reject unexpected headers like User-Agent or Accept`);
+                }
+
                 throw error;
             }
 
