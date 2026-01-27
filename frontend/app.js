@@ -57,6 +57,9 @@ class App {
             this.activeModel = activeModel;
         }
 
+        // Sync LLM keys from backend on startup
+        await this.syncLLMKeysFromBackend();
+
         this.sidebarUI.renderModels();
         this.sidebarUI.renderServers();
         this.updateActiveModelDisplay();
@@ -165,6 +168,32 @@ class App {
      */
 
     /**
+     * Sync LLM keys from backend
+     */
+    async syncLLMKeysFromBackend() {
+        try {
+            const response = await fetch('/api/llm/services');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data) {
+                    // Update in-memory LLM keys with backend data
+                    const services = data.data.services || [];
+                    services.forEach(service => {
+                        // Mark that we have a service configured (but we can't get the actual key)
+                        this.llmKeys[service.name.toLowerCase()] = {
+                            name: service.name,
+                            key: '[stored-in-backend]', // Placeholder for backend-stored keys
+                            addedAt: service.addedAt
+                        };
+                    });
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to sync LLM keys from backend:', err);
+        }
+    }
+
+    /**
      * Save an LLM API key in memory
      */
     async saveLLMKey(serviceName, apiKey) {
@@ -180,7 +209,7 @@ class App {
         
         // Also send to backend
         try {
-            await fetch('/api/llm/key', {
+            const response = await fetch('/api/llm/key', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -188,12 +217,17 @@ class App {
                     apiKey
                 })
             });
+            
+            if (!response.ok) {
+                throw new Error(`Backend returned ${response.status}`);
+            }
         } catch (err) {
             console.warn('Failed to sync key to backend:', err);
             // Still keep it in memory even if backend sync fails
         }
         
-        // Notify UI
+        // Update UI to refresh Council controls
+        this.sidebarUI.renderModels();
         this.sidebarUI.renderLLMKeys();
     }
 
@@ -218,7 +252,8 @@ class App {
             body: JSON.stringify({ serviceName })
         }).catch(err => console.warn('Failed to sync deletion to backend:', err));
         
-        // Update UI
+        // Update UI to refresh Council controls
+        this.sidebarUI.renderModels();
         this.sidebarUI.renderLLMKeys();
     }
 
@@ -230,6 +265,13 @@ class App {
             name: entry.name,
             addedAt: entry.addedAt
         }));
+    }
+
+    /**
+     * Check if we have multiple configured LLM services
+     */
+    hasMultipleLLMServices() {
+        return this.getAllLLMServices().length >= 2;
     }
 
     /**

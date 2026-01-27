@@ -1,54 +1,21 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "frontend",
   "functions": {
-    "api/handlers/llm-keys.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/llm-services.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/llm-key-get.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/mcp-call.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/mcp-connect.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/mcp-disconnect.js": {
-      "memory": 1024, 
-      "maxDuration": 60
-    },
-    "api/handlers/mcp-tools.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/council-consensus.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/council-model-router.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/council-router.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/handlers/health.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
     "api/index.js": {
       "memory": 1024,
       "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index?__path=:path*"
+    }
+  ]
 }

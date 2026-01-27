@@ -37,13 +37,74 @@ export class BackendClient {
                 body: JSON.stringify(body)
             });
 
-            const data = await response.json();
+            // Handle non-JSON responses (like HTML error pages)
+            const responseText = await response.text();
+            
+            if (!responseText.trim()) {
+                throw new Error(`Server returned empty response (${response.status})`);
+            }
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                // Check if response is HTML
+                if (responseText.trim().startsWith('<') || responseText.startsWith('The page')) {
+                    const error = new Error(`Server returned HTML instead of JSON`);
+                    error.isHtmlResponse = true;
+                    error.status = response.status;
+                    error.body = responseText.substring(0, 200);
+                    
+                    // Provide basic suggestions based on status code
+                    let suggestion = 'Check that the MCP server URL is correct and supports CORS requests.';
+                    let detailedMessage = `${response.status} Error: Server returned HTML instead of JSON.`;
+                    
+                    switch (response.status) {
+                        case 401:
+                            suggestion = 'The server requires authentication. If your server does not require auth, check that headers field is empty and no extra headers are being sent.';
+                            detailedMessage = '401 Unauthorized: Server rejected the request. For private servers without auth, ensure the headers field is left empty.';
+                            break;
+                        case 403:
+                            suggestion = 'Access forbidden. The server may be blocking requests from this domain or IP.';
+                            detailedMessage = '403 Forbidden: Access to the server is restricted.';
+                            break;
+                        case 404:
+                            suggestion = 'Server URL not found. Check that the URL is correct and the strata_id is valid.';
+                            detailedMessage = '404 Not Found: The server URL or resource does not exist.';
+                            break;
+                        case 500:
+                        case 502:
+                        case 503:
+                        case 504:
+                            suggestion = 'Server error. The MCP server may be temporarily unavailable.';
+                            detailedMessage = `${response.status} Server Error: The server is currently unavailable.`;
+                            break;
+                    }
+                    
+                    error.suggestion = suggestion;
+                    error.detailedMessage = detailedMessage;
+                    error.responsePreview = responseText.substring(0, 200);
+                    error.troubleshooting = [
+                        '• Check the server URL is correct',
+                        '• Verify CORS configuration on the server',
+                        '• Test the URL directly in your browser'
+                    ];
+                    throw error;
+                }
+                throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
+            }
 
             if (!data.success) {
                 const error = data.error;
                 const err = new Error(`${error.code}: ${error.message}`);
                 err.code = error.code;
                 err.details = error.details;
+                err.suggestion = error.suggestion;
+                err.isHtmlResponse = error.isHtmlResponse;
+                err.status = error.status;
+                err.responsePreview = error.responsePreview;
+                err.troubleshooting = error.troubleshooting;
+                err.serverUrl = error.serverUrl;
                 throw err;
             }
 
@@ -53,8 +114,13 @@ export class BackendClient {
                 throw err;
             }
 
-            const networkError = new Error(`Network error: ${err.message}`);
+            const networkError = new Error(`${err.message}`);
             networkError.code = 'NETWORK_ERROR';
+            networkError.isHtmlResponse = err.isHtmlResponse;
+            networkError.status = err.status;
+            networkError.responsePreview = err.responsePreview;
+            networkError.troubleshooting = err.troubleshooting;
+            networkError.serverUrl = err.serverUrl;
             throw networkError;
         }
     }

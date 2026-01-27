@@ -1,5 +1,10 @@
-import { MCPClient } from './mcpClient.js';
-import { TIMEOUTS } from './constants.js';
+/**
+ * Session Management Utilities
+ * Consolidated session management with LLM key support
+ */
+
+import { MCPClient } from './10-mcp-client.js';
+import { TIMEOUTS } from './9-core-utils.js';
 
 function createSessionId(serverId) {
     return `sess_${serverId}_${Date.now()}_${Math.random().toString(16).slice(2)}`;

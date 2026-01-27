@@ -293,6 +293,33 @@ All errors return:
 **Problem**: Backend requests timing out  
 **Solution**: MCP calls have 30s timeout; check server responsiveness
 
+### 401 Unauthorized Error
+
+**Problem**: Getting "401 Unauthorized" when connecting to a private server that doesn't require authentication
+
+**Solution**:
+1. Ensure the headers field is left empty if your server doesn't require authentication
+2. Check server logs to see exactly what headers are being sent (detailed logging is now enabled)
+3. Use the debug test script to test the connection:
+   ```bash
+   node test-mcp-connection.js http://your-server-url
+   ```
+
+**Debug Information**:
+When you encounter a 401 error, the backend now logs:
+- The exact headers being sent to the server
+- The request body format
+- The response from the server
+- Troubleshooting suggestions
+
+Check your Vercel deployment logs or local dev console to see these details.
+
+**Common Causes**:
+- Unwanted headers being sent (User-Agent, Accept, etc.)
+- Authorization header present when not needed
+- Server expects specific headers format
+- URL is incorrect or path mismatch
+
 ## Development
 
 ### Project Structure

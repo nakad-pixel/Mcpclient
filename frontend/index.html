@@ -87,8 +87,9 @@
                         <input type="url" id="server-url" required placeholder="https://strata.klavis.ai/mcp/">
                     </div>
                     <div class="form-group">
-                        <label>Headers (JSON)</label>
-                        <textarea id="server-headers" rows="4" placeholder='{"Authorization":"Bearer ..."}'></textarea>
+                        <label>Headers (JSON, optional)</label>
+                        <textarea id="server-headers" rows="4" placeholder='{"Authorization": "Bearer YOUR_TOKEN"}'></textarea>
+                        <small class="help-text">Leave empty for servers that don't require authentication</small>
                     </div>
                     <div class="modal-actions">
                         <button type="button" id="test-server-btn" class="btn-secondary">Test Connection</button>

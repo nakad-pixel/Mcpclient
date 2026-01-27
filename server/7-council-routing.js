@@ -1,9 +1,9 @@
 /**
- * Council Router Handler - Reserved for future council routing
- * Currently redirects to consensus handler
+ * Council Routing Handler - GET /api/council
+ * Provides council routing information and model management
  */
 
-import { corsMiddleware, sendSuccess, sendError, ERROR_CODES, HTTP_STATUS } from './utils.js';
+import { corsMiddleware, sendSuccess, sendError, ERROR_CODES, HTTP_STATUS } from './9-core-utils.js';
 
 export default async function handler(req, res) {
     if (corsMiddleware(req, res)) return;
@@ -14,7 +14,13 @@ export default async function handler(req, res) {
             message: 'Council API available',
             endpoints: {
                 consensus: 'POST /api/council/consensus'
-            }
+            },
+            models: [
+                'OpenRouter GPT-4',
+                'OpenRouter Claude',
+                'OpenRouter GPT-3.5',
+                'OpenRouter Llama'
+            ]
         });
     }
 

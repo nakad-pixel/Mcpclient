@@ -41,8 +41,48 @@ export class SidebarUI {
                 await this.app.mcpClient.testConnection(url, headers);
                 btn.textContent = '✅ Success';
             } catch (err) {
+                console.error('Connection test failed:', err);
+                
+                // Provide mobile-friendly error messages with enhanced details
+                let errorMessage = err.message;
+                let detailedMessage = '';
+                
+                if (err.isHtmlResponse) {
+                    // Enhanced error handling for HTML responses
+                    const status = err.status || 'Unknown';
+                    const suggestion = err.suggestion || 'Check the server URL and try again.';
+                    const troubleshooting = err.troubleshooting || [];
+                    
+                    errorMessage = `${status}: ${suggestion}`;
+                    
+                    // Build detailed troubleshooting message
+                    if (troubleshooting.length > 0) {
+                        detailedMessage = 'Troubleshooting steps:\n' + troubleshooting.join('\n');
+                    }
+                    
+                    // Add response preview if available
+                    if (err.responsePreview) {
+                        detailedMessage += '\n\nResponse preview:\n' + err.responsePreview.substring(0, 100);
+                    }
+                } else if (err.message.includes('HTML instead of JSON')) {
+                    errorMessage = 'Connection failed. Check:\n• Server URL is correct\n• Server supports CORS\n• strata_id is valid';
+                } else if (err.message.includes('timed out')) {
+                    errorMessage = 'Connection timed out. Server may be slow or unavailable.';
+                } else if (err.message.includes('CORS')) {
+                    errorMessage = 'CORS error: Server may not allow requests from this domain.';
+                }
+                
                 btn.textContent = '❌ Failed';
-                alert(`Test failed: ${err.message}`);
+                
+                // Show mobile-friendly alert with enhanced details
+                setTimeout(() => {
+                    let fullMessage = `Test failed: ${errorMessage}`;
+                    if (detailedMessage) {
+                        fullMessage += '\n\n' + detailedMessage;
+                    }
+                    alert(fullMessage);
+                    btn.textContent = 'Test Connection';
+                }, 500);
             } finally {
                 btn.disabled = false;
                 setTimeout(() => (btn.textContent = 'Test Connection'), 2000);
@@ -208,15 +248,20 @@ export class SidebarUI {
                 description: t.description || ''
             }));
 
+        // Get configured LLM services (API keys) to determine Council eligibility
+        const hasMultipleLLMServices = this.app.hasMultipleLLMServices();
+
+        // Show message if no LLM tools found
         if (llmTools.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'empty-state';
             empty.textContent = 'No llm_* tools found. Connect to an MCP server that exposes LLM tools.';
             this.modelList.appendChild(empty);
-            this.updateCouncilBadge();
+            this.updateCouncilControls(hasMultipleLLMServices);
             return;
         }
 
+        // Show LLM tools and Council controls if multiple services are configured
         llmTools.forEach(model => {
             const row = document.createElement('div');
             row.className = 'item-row';
@@ -230,36 +275,60 @@ export class SidebarUI {
                     <div class="item-name">${model.modelName}</div>
                     <div class="item-status">${model.description || model.toolName}</div>
                 </div>
-                ${this.app.councilEnabled
+                ${hasMultipleLLMServices && this.app.councilEnabled
                     ? `<input type="checkbox" class="council-cb" ${checkedCouncil ? 'checked' : ''} title="Include in Council">`
                     : `<input type="radio" name="active-model" ${checkedActive ? 'checked' : ''} title="Set as Active">`
                 }
             `;
 
-            if (this.app.councilEnabled) {
+            if (hasMultipleLLMServices && this.app.councilEnabled) {
                 row.querySelector('.council-cb').onchange = () => {
                     const selected = Array.from(this.modelList.querySelectorAll('.council-cb:checked')).map(cb => cb.closest('.item-row').dataset.model);
                     this.app.councilModels = selected;
-                    this.updateCouncilBadge();
+                    this.updateCouncilControls(hasMultipleLLMServices);
                     this.app.saveConfig();
                 };
             } else {
-                row.querySelector('input[type="radio"]').onchange = () => {
-                    this.app.activeModel = model.modelName;
-                    this.app.updateActiveModelDisplay();
-                    this.app.saveConfig();
-                };
+                const radio = row.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.onchange = () => {
+                        this.app.activeModel = model.modelName;
+                        this.app.updateActiveModelDisplay();
+                        this.app.saveConfig();
+                    };
+                }
             }
 
             this.modelList.appendChild(row);
         });
 
-        if (!this.app.councilEnabled && !this.app.activeModel) {
-            this.app.activeModel = llmTools[0].modelName;
-            this.app.saveConfig();
+        if (!hasMultipleLLMServices || !this.app.councilEnabled) {
+            if (!this.app.activeModel && llmTools.length > 0) {
+                this.app.activeModel = llmTools[0].modelName;
+                this.app.saveConfig();
+            }
         }
 
-        this.updateCouncilBadge();
+        this.updateCouncilControls(hasMultipleLLMServices);
+    }
+
+    updateCouncilControls(hasMultipleServices) {
+        const councilSection = document.querySelector('.council-toggle');
+        const badge = document.getElementById('council-badge');
+        
+        if (hasMultipleServices) {
+            // Show Council controls when 2+ LLM services are configured
+            councilSection.style.display = 'block';
+            this.updateCouncilBadge();
+        } else {
+            // Hide Council controls and disable Council mode
+            councilSection.style.display = 'none';
+            if (this.app.councilEnabled) {
+                this.app.councilEnabled = false;
+                document.getElementById('council-mode-toggle').checked = false;
+            }
+            badge.classList.add('hidden');
+        }
     }
 
     updateCouncilBadge() {
@@ -318,7 +387,32 @@ export class SidebarUI {
                         this.app.updateActiveModelDisplay();
                     })
                     .catch(err => {
-                        alert(`Refresh failed: ${err.message}`);
+                        // Enhanced error handling for refresh failures
+                        let errorMessage = err.message;
+                        let detailedMessage = '';
+                        
+                        if (err.isHtmlResponse) {
+                            const status = err.status || 'Unknown';
+                            const suggestion = err.suggestion || 'Check the server URL and try again.';
+                            const troubleshooting = err.troubleshooting || [];
+                            
+                            errorMessage = `${status}: ${suggestion}`;
+                            
+                            if (troubleshooting.length > 0) {
+                                detailedMessage = 'Troubleshooting:\n' + troubleshooting.join('\n');
+                            }
+                            
+                            if (err.responsePreview) {
+                                detailedMessage += '\n\nResponse:\n' + err.responsePreview.substring(0, 100);
+                            }
+                        }
+                        
+                        let fullMessage = `Refresh failed: ${errorMessage}`;
+                        if (detailedMessage) {
+                            fullMessage += '\n\n' + detailedMessage;
+                        }
+                        
+                        alert(fullMessage);
                         this.renderServers();
                     });
             };
